@@ -1,36 +1,35 @@
-# === Core APIs ===
-fastapi>=0.110
+# === Core API Services ===
+fastapi>=0.110.0
 uvicorn[standard]>=0.27.1
-
-# === CORS & WebSockets ===
-python-multipart
-websockets>=11.0.3
-websocket-client>=1.6.1
-aiofiles>=23.1.0
+requests>=2.31
+python-multipart>=0.0.7
+aiofiles>=23.2.1
 
 # === AI Clients ===
 openai>=1.14.3
-google-generativeai>=0.5.4  # Gemini Pro API client
+google-generativeai>=0.5.4
 
-# === Streamlit + UI ===
-streamlit>=1.34
+# === WebSockets ===
+websockets>=11.0.3
+websocket-client>=1.6.1
+
+# === Streamlit Frontend ===
+streamlit>=1.34.0
 streamlit-ace>=0.1.1
 streamlit-autorefresh>=0.0.4
-streamlit-webrtc>=0.45.2
 
-# === Diff Viewers & Editors ===
-difflib  # part of stdlib, no install needed
-beautifulsoup4>=4.12.3  # Optional, if parsing diffs
-markdown2>=2.4.13       # If formatting doc output
+# === Optional: Use streamlit-webrtc with caution on 3.11
+# Commented out until a compatible release is available
+# streamlit-webrtc==0.44.5  # Avoids version pin issues on 3.11
 
-# === Code & Audio Tools ===
-requests>=2.31
-soundfile>=0.12.1
+# === Audio, Diff & Editor Tools ===
 pydub>=0.25.1
+soundfile>=0.12.1
 numpy>=1.26
-av>=11.0.0
-scipy>=1.11
+av>=10.0.0   # Compatible with Python 3.11
+markdown2>=2.4.13
+beautifulsoup4>=4.12.3
 
 # === Developer Utilities ===
-python-dotenv>=1.0.1  # For loading keys securely
-loguru>=0.7.2         # Optional logging upgrade
+python-dotenv>=1.0.1
+loguru>=0.7.2
