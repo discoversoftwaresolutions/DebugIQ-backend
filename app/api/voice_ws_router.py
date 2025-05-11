@@ -10,6 +10,13 @@ from scripts import run_autonomous_workflow, platform_data_api
 
 router = APIRouter()
 
+@router.get("/voice/ping")
+async def voice_ws_health_check():
+    """
+    Quick health check for DebugIQ Voice WebSocket Router.
+    """
+    return {"status": "ok", "message": "Voice WS router is live."}
+
 @router.websocket("/voice/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
