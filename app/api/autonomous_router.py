@@ -24,3 +24,10 @@ def suggest_patch(input_data: DiagnosisInput):
         issue_id=input_data.issue_id,
         diagnosis=input_data.diagnosis
     )
+@router.post("/diagnose", tags=["Autonomous Agents"])
+def diagnose_issue(issue: IssueInput):
+    """
+    Diagnoses the root cause of the issue using logs and metadata.
+    """
+    return platform_data_api.get_diagnosis(issue.issue_id) or \
+           autonomous_diagnose_issue.autonomous_diagnose(issue.issue_id)
