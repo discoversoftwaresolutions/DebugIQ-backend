@@ -23,5 +23,5 @@ You are a code reviewer AI. Assess the following patch and validation results.
 Determine whether this patch should be accepted and summarize the reasoning.
 
 Patch:
-```diff
-{patch_diff}
+"""diff
+
