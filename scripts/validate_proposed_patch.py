@@ -1,4 +1,3 @@
-python
 import json
 import traceback
 from utils.call_ai_agent import call_ai_agent
