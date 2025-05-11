@@ -1,9 +1,15 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from scripts import agent_suggest_patch, platform_data_api
+from scripts import ingest_and_triage_issue
 
 router = APIRouter()
 
+class RawIssueData(BaseModel):
+    raw_data: dict
+
+@router.post("/triage")
+def triage_issue(payload: RawIssueData):
+    return ingest_and_triage_issue.ingest_and_triage(payload.raw_data)
 # --- Models ---
 
 class IssueInput(BaseModel):
