@@ -38,3 +38,20 @@ def run_full_workflow(issue: IssueInput):
     Runs full autonomous debugging workflow for an issue.
     """
     return run_autonomous_workflow.run_workflow_for_issue(issue.issue_id)
+
+@router.post("/create-pr", tags=["Autonomous Agents"])
+def create_ai_pull_request(issue: IssueInput):
+    """
+    Create a Pull Request using AI-generated patch and validation results.
+    """
+    diagnosis = platform_data_api.get_diagnosis(issue.issue_id)
+    patch = platform_data_api.get_proposed_patch(issue.issue_id)
+    validation = platform_data_api.get_validation_results(issue.issue_id)
+
+    return create_fix_pull_request.create_pull_request(
+        issue_id=issue.issue_id,
+        branch_name=f"debugiq/fix-{issue.issue_id.lower()}",
+        code_diff=patch.get("patch", ""),
+        diagnosis_details=diagnosis,
+        validation_results=validation
+    )
