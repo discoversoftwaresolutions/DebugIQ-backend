@@ -44,7 +44,52 @@ app.include_router(issues_router, tags=["Issues"])
 def read_root():
     return {"message": "Welcome to the DebugIQ API"}
 
-# Health check
+app.on_event("startup")
+async def startup_event():
+    """
+    Runs once when the API server starts.
+    Initializes agent state, logs launch, and primes key services.
+    """
+    # Log startup event
+    now = datetime.datetime.now().isoformat()
+    logging.basicConfig(level=logging.INFO)
+    logging.info(f"🚀 DebugIQ API started at {now}")
+
+    # Example: Initialize in-memory agent context or counters
+    app.state.active_agents = {}
+    app.state.launch_time = now
+
+    # Optional: Warm up LLM endpoint
+    try:
+        import requests
+        ping = requests.get("https://autonomous-debug.onrender.com/health")
+        logging.info(f"Backend health ping: {ping.status_code}")
+    except Exception as e:
+        logging.error(f"Health ping failed: {e}")
+
+# Health check@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Executed once when the API is stopping.
+    Useful for agent cleanup, logging, cache clearing, etc.
+    """
+    import logging
+
+    logging.info("🛑 DebugIQ API shutting down...")
+
+    # Example: Clean up in-memory agent state
+    if hasattr(app.state, "active_agents"):
+        count = len(app.state.active_agents)
+        logging.info(f"🧹 Releasing {count} active agents")
+        app.state.active_agents.clear()
+
+    # Optionally flush logs or close external connections
+    # (e.g., Redis, DB, voice sockets)
+    try:
+        logging.info("✅ Shutdown complete.")
+    except Exception as e:
+        logging.error(f"Error during shutdown: {e}")
+
 @app.get("/health")
 def health_check():
     return {"status": "ok", "message": "API is running"}
