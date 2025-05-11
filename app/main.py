@@ -11,6 +11,7 @@ from app.api.voice_ws_router import router as voice_ws_router
 from app.api.autonomous_router import router as autonomous_router
 from app.api.metrics_router import router as metrics_router
 from app.api.issues_router import router as issues_router
+from app.api.metrics_router import router as metrics_router
 
 # Initialize the app
 app = FastAPI(
@@ -37,8 +38,8 @@ app.include_router(voice_ws_router, tags=["Voice WebSocket"])
 app.include_router(autonomous_router, prefix="/workflow", tags=["Autonomous Workflow"])
 app.include_router(metrics_router, tags=["Metrics"])
 app.include_router(issues_router, tags=["Issues"])
+app.include_router(metrics_router, tags=["Metrics"])# Root endpoint
 
-# Root endpoint
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the DebugIQ API"}
