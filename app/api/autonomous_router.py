@@ -31,3 +31,10 @@ def diagnose_issue(issue: IssueInput):
     """
     return platform_data_api.get_diagnosis(issue.issue_id) or \
            autonomous_diagnose_issue.autonomous_diagnose(issue.issue_id)
+
+@router.post("/run-workflow", tags=["Autonomous Agents"])
+def run_full_workflow(issue: IssueInput):
+    """
+    Runs full autonomous debugging workflow for an issue.
+    """
+    return run_autonomous_workflow.run_workflow_for_issue(issue.issue_id)
