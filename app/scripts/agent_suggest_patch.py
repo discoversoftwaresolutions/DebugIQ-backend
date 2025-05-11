@@ -1,7 +1,7 @@
 import json
 import traceback
 from scripts import platform_data_api
-from utils.ai_api_client import call_ai_agent
+from utils.call_ai_agent import call_ai_agent
 
 PATCH_SUGGESTION_TASK_TYPE = "patch_suggestion"
 
