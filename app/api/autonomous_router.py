@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from scripts import platform_data_api
 from scripts import autonomous_diagnose_issue
-from scripts import agent_suggest_patch
+from scripts.agent_suggest_patch import agent_suggest_patch
 
 router = APIRouter()
 
