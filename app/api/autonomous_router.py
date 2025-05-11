@@ -55,3 +55,9 @@ def create_ai_pull_request(issue: IssueInput):
         diagnosis_details=diagnosis,
         validation_results=validation
     )
+@router.post("/triage", tags=["Autonomous Agents"])
+def triage_issue(payload: RawIssueData):
+    """
+    AI triages raw issue data (logs, traces, errors).
+    """
+    return ingest_and_triage_issue.ingest_and_triage(payload.raw_data)
