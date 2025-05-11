@@ -1,3 +1,4 @@
+python
 import json
 import traceback
 from utils.call_ai_agent import call_ai_agent
@@ -5,7 +6,7 @@ from utils.call_ai_agent import call_ai_agent
 def validate_patch(issue_id: str, patch_diff: str) -> dict:
     print(f"[🔍] Validating patch for issue {issue_id}...")
 
-    # Simulate validation checks
+    # Simulated validation logic
     checks = [
         {"check": "Patch Applies Cleanly", "status": "passed"},
         {"check": "Static Analysis", "status": "passed"},
@@ -14,14 +15,30 @@ def validate_patch(issue_id: str, patch_diff: str) -> dict:
     ]
 
     is_valid = all(step["status"] == "passed" for step in checks)
+    validation_summary = "\n".join(f"- {step['check']}: {step['status']}" for step in checks)
 
-    # Build readable validation summary
-    validation_summary = "\n".join(f"- {c['check']}: {c['status']}" for c in checks)
+    # Avoid using triple backticks inside triple-quoted strings
+    # We'll use indentation instead of ```diff
+    prompt = f"""You are an AI code reviewer. Assess the following patch and validation results.
 
-    prompt = f"""
-You are a code reviewer AI. Assess the following patch and validation results.
-Determine whether this patch should be accepted and summarize the reasoning.
+Patch (unified diff format):
+{patch_diff}
 
-Patch:
+Validation Results:
+{validation_summary}
+
+Respond in JSON format like this:
+{{
+  "is_valid": true,
+  "reason": "Short explanation"
+}}
 """
 
+    try:
+        response = call_ai_agent("qa", {"code": prompt})
+        if "result" in response:
+            return json.loads(response["result"])
+        return {"is_valid": False, "error": response.get("error", "Agent did not return a result")}
+    except Exception as e:
+        traceback.print_exc()
+        return {"is_valid": False, "error": str(e)}
