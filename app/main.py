@@ -5,8 +5,13 @@ from app.api.voice_ws_router import router as voice_ws_routerapp = FastAPI()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Routers
+# Core DebugIQ Modules
+from app.api import analyze, qa, doc, config, voice
+from app.api.voice_interactive_router import router as voice_interactive_router
+from app.api.voice_ws_router import router as voice_ws_router
 from app.api.autonomous_router import router as autonomous_router
+from app.api.metrics_router import router as metrics_router
+from app.api.issues_router import router as issues_router
 
 # Initialize the app
 app = FastAPI(
