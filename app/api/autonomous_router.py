@@ -61,3 +61,10 @@ def triage_issue(payload: RawIssueData):
     AI triages raw issue data (logs, traces, errors).
     """
     return ingest_and_triage_issue.ingest_and_triage(payload.raw_data)
+
+@router.post("/run-workflow", tags=["Autonomous Agents"])
+def run_full_workflow(issue: IssueInput):
+    """
+    Runs full autonomous debugging workflow for an issue.
+    """
+    return run_autonomous_workflow.run_workflow_for_issue(issue.issue_id)
