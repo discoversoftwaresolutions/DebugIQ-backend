@@ -5,7 +5,7 @@ from utils.call_ai_agent import call_ai_agent
 def validate_patch(issue_id: str, patch_diff: str) -> dict:
     print(f"[🔍] Validating patch for issue {issue_id}...")
 
-    # Simulate some checks — in real world, integrate test runners, linters, etc.
+    # Simulate validation checks
     checks = [
         {"check": "Patch Applies Cleanly", "status": "passed"},
         {"check": "Static Analysis", "status": "passed"},
@@ -15,8 +15,12 @@ def validate_patch(issue_id: str, patch_diff: str) -> dict:
 
     is_valid = all(step["status"] == "passed" for step in checks)
 
+    # Build readable validation summary
+    validation_summary = "\n".join(f"- {c['check']}: {c['status']}" for c in checks)
+
     prompt = f"""
-Given the following patch and validation results, summarize whether it is safe to proceed.
+You are a code reviewer AI. Assess the following patch and validation results.
+Determine whether this patch should be accepted and summarize the reasoning.
 
 Patch:
 ```diff
