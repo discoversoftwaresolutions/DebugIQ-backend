@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from scripts import (
-    agent_suggest_patch,
-    autonomous_diagnose_issue,
-    platform_data_api,
-)
+
+# ✅ Direct imports to avoid __init__.py dependency issues
+from scripts import platform_data_api
+from scripts import autonomous_diagnose_issue
+from scripts import agent_suggest_patch
 
 router = APIRouter()
 
