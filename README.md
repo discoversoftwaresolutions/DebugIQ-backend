@@ -9,7 +9,7 @@ This service is responsible for diagnosis, patch suggestion, QA validation, auto
 ## 🚀 Features
 
 - 🤖 **Autonomous Multi-Step Workflows** (`run_autonomous_workflow.py`)
-- 🧠 DebugIQ voice-bidirectional + chat
+- 🧠 DebugIQ voice bi-directional + chat
   - Root cause analysis
   - Patch generation (diff + explanation)
   - QA validation + result interpretation
