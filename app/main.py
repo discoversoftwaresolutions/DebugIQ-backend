@@ -1,4 +1,3 @@
-# File: app/main.py
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))  # root of project
@@ -11,6 +10,7 @@ from app.api.voice_ws_router import router as voice_ws_router
 from app.api.autonomous_router import router as autonomous_router
 from app.api.issues_router import router as issues_router
 from app.api.metrics_router import router as metrics_router
+from app.api.suggest_patch_router import router as suggest_patch_router  # Import the suggest_patch router
 
 # Initialize the app
 app = FastAPI(
@@ -36,13 +36,15 @@ app.include_router(config.config_router, prefix="/api", tags=["Configuration"])
 app.include_router(voice_ws_router, tags=["Voice WebSocket"])
 app.include_router(autonomous_router, prefix="/workflow", tags=["Autonomous Workflow"])
 app.include_router(issues_router, tags=["Issues"])
-app.include_router(metrics_router, tags=["Metrics"])# Root endpoint
+app.include_router(metrics_router, tags=["Metrics"])
+app.include_router(suggest_patch_router, prefix="/debugiq", tags=["Patch Suggestions"])  # Register the suggest_patch router
 
+# Root endpoint
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the DebugIQ API"}
 
-app.on_event("startup")
+@app.on_event("startup")
 async def startup_event():
     """
     Runs once when the API server starts.
@@ -65,7 +67,7 @@ async def startup_event():
     except Exception as e:
         logging.error(f"Health ping failed: {e}")
 
-# Health check@app.on_event("shutdown")
+@app.on_event("shutdown")
 async def shutdown_event():
     """
     Executed once when the API is stopping.
