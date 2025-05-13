@@ -214,10 +214,3 @@ We are building a global community of developers who care about intelligent debu
 Follow us:
 
 X (formerly Twitter)
-
-LinkedIn
-
-Website
-
-“Don’t just fix bugs — understand them, evolve from them, and automate their extinction.”— DebugIQ Team
-
