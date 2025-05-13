@@ -1,93 +1,181 @@
-# 🧠 DebugIQ Backend
+🧠 DebugIQ Backend
 
-The backend for **DebugIQ**, an autonomous debugging and patching agent platform built using **FastAPI**, powered by **GPT-4o**, **Gemini**, and multi-agent orchestration.
+The backend for DebugIQ, an autonomous debugging and patching agent platform built using FastAPI, powered by GPT-4o, Gemini, and multi-agent orchestration.
 
-This service is responsible for diagnosis, patch suggestion, QA validation, auto-documentation, pull request creation, and agent workflow orchestration.
+Developed by Discover Software Solutions
 
----
+This service performs automated diagnosis, patch suggestion, QA validation, pull request creation, and orchestrates multi-agent debugging workflows — enabling AI-assisted bug triage at scale.
 
-## 🚀 Features
+🚀 Features
 
-- 🤖 **Autonomous Multi-Step Workflows** (`run_autonomous_workflow.py`)
-- 🧠 DebugIQ voice bi-directional + chat
-  - Root cause analysis
-  - Patch generation (diff + explanation)
-  - QA validation + result interpretation
-  - Auto-documentation and PR prep
-- 🔗 GitHub PR creation (stubbed / production-ready)
-- 📊 Agent & workflow metrics via `/metrics/status`
-- 🗃️ Mock in-memory issue database (`scripts.mock_db`)
-- 📦 Modular architecture — plug-and-play agents
+🤖 Autonomous Debugging Pipelines(run_autonomous_workflow.py)
 
----
+Issue diagnosis → patch proposal → QA → PR
 
-## 🧱 Architecture
+🎧 Bi-Directional Voice Debugging (WebSocket + Gemini)
+
+Natural language input/output
+
+Audio streaming and transcript-based analysis
+
+💪 Patch Generation with LLM Agents
+
+Git-style diff + human-readable explanation
+
+✅ Validation & Auto-Documentation
+
+QA loop validates patch before PR
+
+🔗 GitHub PR Automation
+
+Stubbed for open source, extensible to full CI/CD
+
+📊 Agent & Workflow Metrics
+
+JSON summaries via /metrics/status
+
+🗃️ Mock In-Memory Issue Database
+
+No external DB required for local testing
+
+🔌 Pluggable Architecture
+
+Add, swap, or scale agents modularly
+
+🛡️ Architecture Overview
 
 FastAPI
 │
-├── /app
-│ └── api/
-│ ├── autonomous_router.py # Orchestrated endpoints
-│ ├── metrics_router.py # Agent metrics
-│ ├── issues_router.py # Inbox / triage endpoints
-│ ├── voice_ws_router.py # Voice (WebSocket)
-│ └── voice_interactive_router.py # Voice (text/audio via Gemini)
+├── /app/api/
+│   ├── autonomous_router.py         # Orchestrated workflows
+│   ├── metrics_router.py            # Workflow/agent telemetry
+│   ├── issues_router.py             # Issue tracking
+│   ├── voice_ws_router.py           # Gemini voice via WebSocket
+│   └── voice_interactive_router.py  # Text/audio voice agent
 │
-├── /scripts
-│ ├── run_autonomous_workflow.py # 🧠 Core agent pipeline
-│ ├── platform_data_api.py # DB/metadata fetchers
-│ ├── agent_suggest_patch.py # Patch LLM agent
-│ ├── autonomous_diagnose_issue.py # Root cause agent
-│ ├── validate_proposed_patch.py # QA validator
-│ ├── create_fix_pull_request.py # PR creator
-│ └── mock_db.py # In-memory issue tracker
+├── /scripts/
+│   ├── run_autonomous_workflow.py     # 🧠 Main workflow runner
+│   ├── platform_data_api.py           # Repo/code context handlers
+│   ├── autonomous_diagnose_issue.py   # Root cause agent
+│   ├── agent_suggest_patch.py         # Patch LLM agent
+│   ├── validate_proposed_patch.py     # QA agent logic
+│   ├── create_fix_pull_request.py     # PR creator (stubbed)
+│   └── mock_db.py                     # Local issue memory
 
-yaml
-Copy
-Edit
+🌐 API Endpoints
 
----
+Endpoint
 
-## 🌐 API Endpoints
+Method
 
-| Endpoint                       | Method | Description                          |
-|-------------------------------|--------|--------------------------------------|
-| `/health`                     | GET    | Health check                         |
-| `/workflow/diagnose`          | POST   | Run diagnosis agent                  |
-| `/suggest-patch`              | POST   | Run patch agent                      |
-| `/workflow/triage`            | POST   | Triage raw issue data                |
-| `/workflow/seed`              | POST   | Seed mock issue into memory          |
-| `/run_autonomous_workflow`    | POST   | Run full AI → QA → PR workflow       |
-| `/metrics/status`             | GET    | Agent + issue metrics (JSON)         |
-| `/issues/inbox`               | GET    | List all new issues                  |
-| `/issues/attention-needed`    | GET    | Show issues needing review           |
+Description
 
----
+/health
 
-## 🛠️ Running Locally
+GET
 
-```bash
-# From the backend root
+Health check
+
+/workflow/diagnose
+
+POST
+
+Run diagnosis agent
+
+/suggest-patch
+
+POST
+
+Run patch agent
+
+/workflow/triage
+
+POST
+
+Parse and categorize issue input
+
+/workflow/seed
+
+POST
+
+Seed mock issue into memory
+
+/run_autonomous_workflow
+
+POST
+
+Run full AI → QA → PR pipeline
+
+/metrics/status
+
+GET
+
+Agent + workflow metrics
+
+/issues/inbox
+
+GET
+
+List all incoming issues
+
+/issues/attention-needed
+
+GET
+
+Issues requiring further triage
+
+🛠️ Running Locally
+
+# Clone and start DebugIQ backend
+git clone https://github.com/discoversoftwaresolutions/debugiq-backend.git
+cd debugiq-backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
+
 🌐 Deployment Notes
-Component	Notes
-API Gateway	Mounted via / or behind proxy (e.g. Vercel, Render)
-Voice WS	Enable WebSocket support if running Gemini voice
-CORS	Open in dev, restrict for production
-GitHub Integration	Stubbed in create_fix_pull_request.py — integrate your token and org logic
+
+Component
+
+Notes
+
+API Gateway
+
+Mount / or proxy via Vercel, Render, or your platform
+
+Voice WebSocket
+
+Enable WS support for Gemini-based voice debugging
+
+CORS
+
+Allow all for dev; restrict for production
+
+GitHub PR
+
+Integrate your token/org logic into create_fix_pull_request.py
 
 📦 Environment Variables
-Name	Purpose
-OPENAI_API_KEY	For GPT-4o interactions
-GEMINI_API_KEY	For Gemini agents & voice
-GITHUB_TOKEN	For pull request automation
 
-🧪 Seed Mock Issue Example
-json
-Copy
-Edit
+Variable
+
+Purpose
+
+OPENAI_API_KEY
+
+GPT-4o model access
+
+GEMINI_API_KEY
+
+Gemini agents and audio processing
+
+GITHUB_TOKEN
+
+For GitHub PR automation (optional)
+
+🧲 Example: Seed Mock Issue
+
 POST /workflow/seed
+Content-Type: application/json
 
 {
   "issue_id": "ISSUE-001",
@@ -98,13 +186,38 @@ POST /workflow/seed
   "relevant_files": ["auth.py"],
   "repository": "https://github.com/your-org/repo"
 }
+
+🔒 License
+
+Distributed under the Apache 2.0 License.See LICENSE for more information.
+
+🤝 Contributing
+
+We welcome contributions from the community! Please see our CONTRIBUTING.md for setup, issue guidelines, and PR processes.
+
 🧠 Powered By
+
 OpenAI GPT-4o
 
 Gemini Pro
 
 FastAPI
 
-Streamlit Dashboard
+Streamlit
 
 Discover Software Solutions
+
+🌍 Join the Community
+
+We are building a global community of developers who care about intelligent debugging, autonomous tooling, and AI-native software workflows.
+
+Follow us:
+
+X (formerly Twitter)
+
+LinkedIn
+
+Website
+
+“Don’t just fix bugs — understand them, evolve from them, and automate their extinction.”— DebugIQ Team
+
