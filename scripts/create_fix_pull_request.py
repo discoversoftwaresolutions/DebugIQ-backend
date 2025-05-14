@@ -58,7 +58,3 @@ Diagnosis Summary:
 
 Validation Results:
 {validation_results.get('summary', 'N/A')}
-
-Code Changes (Unified Diff Format):
-```diff
-{code_diff}
