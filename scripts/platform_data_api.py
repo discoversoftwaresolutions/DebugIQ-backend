@@ -228,11 +228,25 @@ async def fetch_code_context(repo_url: str, files_to_fetch: list[str]) -> str | 
     # --- Mock Implementation (Synchronous) ---
     # In a real implementation, you'd interact with a Git client or Git hosting API
     # to fetch file content from the given repo_url.
+  # Used by agent_suggest_patch function
+async def fetch_code_context(repo_url: str, files_to_fetch: list[str]) -> str | None:
+    """
+    Fetches code content for specific files from a repository URL.
+    This is a mock implementation.
+    Async signature to prepare for async I/O.
+    """
+    logger.info(f"[platform_data_api] Fetching code context from {repo_url} for files: {files_to_fetch}")
+    # --- Mock Implementation (Synchronous) ---
+    # In a real implementation, you'd interact with a Git client or Git hosting API
+    # to fetch file content from the given repo_url.
     mock_context = f"""
---- Mock Code Context for {repo_url} ---
-
-File: {files_to_fetch[0] if files_to_fetch else 'N/A'}
-```python
-# Simulated content for the first requested file
-def example_function():
-    pass
+    --- Mock Code Context for {repo_url} ---
+    
+    File: {files_to_fetch[0] if files_to_fetch else 'N/A'}
+    ```python
+    # Simulated content for the first requested file
+    def example_function():
+        pass
+    ```
+    """
+    return mock_context
