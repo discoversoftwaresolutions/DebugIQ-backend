@@ -2,7 +2,7 @@ import sys
 import os
 import datetime
 import logging
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))  # root of project
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../")) # root of project
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
