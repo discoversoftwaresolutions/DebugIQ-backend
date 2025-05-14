@@ -1,39 +1,77 @@
 import json
 import traceback
-from scripts import platform_data_api
-from utils.call_ai_agent import call_ai_agent
-# Add FastAPI import to define the router
-from fastapi import APIRouter # <--- ADDED
+from scripts import platform_data_api # Needed by agent_suggest_patch function
+from utils.call_ai_agent import call_ai_agent # Needed by agent_suggest_patch function
+from fastapi import APIRouter # Keep
+from fastapi import HTTPException # Added for proper error handling
+from pydantic import BaseModel # Added for input model
 
 PATCH_SUGGESTION_TASK_TYPE = "patch_suggestion"
 
 # Define the API router for patch suggestion related endpoints
-# This is the 'router' object that other files will import
-router = APIRouter() # <--- ADDED
+# Main.py includes this router with prefix /debugiq
+router = APIRouter() # Keep
+
+# --- Pydantic Model for Frontend Payload for this Endpoint ---
+class CodeInput(BaseModel):
+    code: str
 
 # ===============================================================
-# Define your API endpoints using the 'router' object here.
-# Example:
-# @router.post("/suggest")
-# async def create_patch_suggestion(issue_id: str, diagnosis_data: dict):
-#     # You would call your agent_suggest_patch function from here
-#     patch_result = agent_suggest_patch(issue_id, diagnosis_data)
-#     if patch_result:
-#         return patch_result
-#     # Add error handling here if agent_suggest_patch returns None
-#     return {"error": "Failed to generate patch"}
+# Define the API endpoint for suggest-patch here, MOVED from autonomous_router.py
+# Path is /suggest_patch within this router.
+# Main.py includes this router with prefix /debugiq, resulting in /debugiq/suggest_patch
+@router.post("/suggest_patch") # <--- ADDED/MOVED ENDPOINT
+def suggest_patch_endpoint(payload: CodeInput): # <--- ACCEPTING CODE PAYLOAD FROM FRONTEND
+    """
+    Receives code directly and attempts to suggest a patch.
+    This endpoint needs to be implemented to work based on
+    raw code, or the frontend payload/workflow needs adjustment.
+    """
+    print(f"Received request to suggest patch based on code.")
+    provided_code = payload.code
+
+    # --- LOGIC MISMATCH / IMPLEMENTATION NEEDED ---
+    # The 'agent_suggest_patch' function defined below requires 'issue_id' and 'diagnosis'.
+    # This endpoint receives 'code'.
+    # You need to decide how to bridge this:
+    # Option A: Implement logic here to process 'provided_code' and call an AI agent directly based on code.
+    # Option B: If this endpoint *should* be part of the workflow, change frontend to send issue_id
+    #           and call agent_suggest_patch(issue_id, get_diagnosis(issue_id)).
+    # Option C: Call a *different* agent function designed to work from raw code.
+
+    # Placeholder implementation - replace with your actual logic
+    # For now, it will raise an error indicating it needs implementation.
+    # You could also return a simple placeholder response while testing routing.
+
+    # Example of a placeholder response:
+    # return {
+    #      "patch": "```diff\n--- a/example.py\n+++ b/example.py\n@@ -1,1 +1,1 @@\n-old line\n+new line\n```",
+    #      "explanation": "Placeholder patch based on provided code.",
+    #      "patched_file_name": "example.py"
+    # }
+
+    # Raising an error to clearly show this endpoint needs implementation
+    raise HTTPException(
+        status_code=501, # 501 Not Implemented
+        detail="Suggest patch from code endpoint not fully implemented yet based on this payload structure. Review logic mismatch notes."
+    )
+
 # ===============================================================
 
-
+# Your existing core function that does the work (likely used by the workflow where issue_id and diagnosis are available)
 def agent_suggest_patch(issue_id: str, diagnosis: dict) -> dict | None:
     """
-    Core function to orchestrate the patch suggestion process.
-    This function is likely called by an API endpoint defined on the router.
+    Core function to orchestrate the patch suggestion process, typically
+    called within the autonomous workflow using issue ID and diagnosis.
+    This function is separate from the /suggest_patch API endpoint above,
+    unless the endpoint is specifically implemented to call this function
+    after somehow obtaining issue_id and diagnosis.
     """
     print(f"🩹 Starting patch suggestion for issue: {issue_id}")
 
-    # Fetch repository information
-    # Assuming platform_data_api has get_repository_info_for_issue and fetch_code_context
+    # ... rest of your existing function code ...
+    # This code relies on issue_id and diagnosis
+
     try:
         repo_info = platform_data_api.get_repository_info_for_issue(issue_id)
         if not repo_info:
@@ -86,8 +124,7 @@ Respond with the following format:
              response_data = json.loads(response) if isinstance(response, str) else response
         except json.JSONDecodeError:
              print(f"⚠️ AI agent response was not valid JSON: {response}")
-             # Handle this case - maybe return a default structure or error
-             response_data = {} # Or raise an exception
+             response_data = {} # Handle invalid JSON
 
         # Parse and return the response
         return {
@@ -101,5 +138,8 @@ Respond with the following format:
         traceback.print_exc()
         return None
 
-# Note: Your existing function 'agent_suggest_patch' is now available
-# to be called from the API endpoints defined on the 'router' object above.
+# Note: Your existing function 'agent_suggest_patch' is available
+# to be called from other parts of your application (like potentially
+# the /workflow/run_autonomous_workflow endpoint) or from the
+# /debugiq/suggest_patch endpoint *if* you implement the logic there
+# to provide the necessary issue_id and diagnosis.
