@@ -45,16 +45,24 @@ def generate_pr_body_with_gemini(issue_id: str, code_diff: str, diagnosis_detail
     if not GEMINI_API_KEY:
         return "LLM configuration missing. PR body generated from template."
 
-    try:
-        model = genai.GenerativeModel('gemini-1.5-flash-latest') # Or your preferred Gemini model
+   # Initialize the Generative Model
+model = genai.GenerativeModel('gemini-1.5-flash-latest')  # Replace with your preferred Gemini model
 
-        prompt = f"""
+# Prompt construction
+prompt = f"""
 You are an AI assistant tasked with writing a professional and concise Pull Request description based on a bug fix and its validation.
 
 Use the following information:
 
 Issue ID: {issue_id}
 
+The following references were attached as context:
+
+The user is currently located in a GitHub repository, but possibly a sub-directory of that GitHub repository. Their current URL can tell you specifically, but included is some information about the languages and repository itself.
+repo: discoversoftwaresolutions/DebugIQ-backend
+repo ID: 981398754
+The language composition of this repo is [{"name":"Python","percent":99.5},{"name":"Dockerfile","percent":0.5}]
+"""
 Diagnosis Summary:
 {diagnosis_details.get('summary', 'N/A')}
 
