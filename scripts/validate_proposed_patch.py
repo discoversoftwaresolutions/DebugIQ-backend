@@ -1,8 +1,6 @@
 import json
 import traceback
 from utils.call_ai_agent import call_ai_agent
-from scripts.validate_proposed_patch import validate_patch 
-
 def validate_patch(issue_id: str, patch_diff: str) -> dict:
     print(f"[🔍] Validating patch for issue {issue_id}...")
 
