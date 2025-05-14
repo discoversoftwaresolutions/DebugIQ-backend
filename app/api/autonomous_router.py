@@ -6,7 +6,7 @@ from scripts import autonomous_diagnose_issue # Assumed for diagnosis logic
 from scripts.agent_suggest_patch import agent_suggest_patch # Assumed for patch suggestion function
 # Import create_pull_request - Assumed to be in a separate module now
 from scripts.github_pr_manager import create_pull_request # <--- ASSUMING this is the new location
-
+from scripts.validate_proposed_patch import validate_patch 
 # Assumed import for validation logic - You need to implement validate_patch
 # from scripts.validate_patch import validate_patch # <--- YOU NEED TO CREATE THIS FILE/FUNCTION
 
