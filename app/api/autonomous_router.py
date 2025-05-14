@@ -2,12 +2,12 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from scripts import platform_data_api
 from scripts import autonomous_diagnose_issue
-from scripts.agent_suggest_patch import agent_suggest_patch
+# Removed: from scripts.agent_suggest_patch import agent_suggest_patch # Endpoint moved
 
 router = APIRouter()
 
 # --- Pydantic Models ---
-
+# Keep all models
 class IssueInput(BaseModel):
     issue_id: str
 
@@ -27,34 +27,32 @@ class MockSeedInput(BaseModel):
     relevant_files: list[str]
     repository: str
 
-# --- ROUTES ---
 
-@router.post("/workflow/triage")
+# --- ROUTES ---
+# Removed /workflow prefix
+@router.post("/triage") # Final path will be /workflow/triage
 def triage_issue(payload: RawIssueData):
     return {"message": "Triage endpoint stub", "data": payload.raw_data}
 
-
-@router.post("/workflow/diagnose")
-def diagnose_issue(issue: IssueInput):
+# Renamed path to match frontend call and removed /workflow prefix
+@router.post("/run_autonomous_workflow") # Final path will be /workflow/run_autonomous_workflow
+def diagnose_issue(issue: IssueInput): # Function name can remain diagnose_issue if it performs diagnosis
+    """
+    Endpoint triggered by the frontend to start the autonomous workflow.
+    Calls the diagnosis logic.
+    """
     result = autonomous_diagnose_issue.autonomous_diagnose(issue.issue_id)
     return {"diagnosis": result}
 
+# Removed: @router.post("/suggest-patch") and def suggest_patch function - MOVED TO agent_suggest_patch.py
 
-@router.post("/suggest-patch")
-def suggest_patch(issue: IssueInput):
-    diagnosis = platform_data_api.get_diagnosis(issue.issue_id)
-    if not diagnosis:
-        return {"error": f"No diagnosis found for issue {issue.issue_id}"}
-    patch_result = agent_suggest_patch.agent_suggest_patch(issue.issue_id, diagnosis)
-    return {"patch": patch_result}
-
-
-@router.post("/workflow/seed")
+# Removed /workflow prefix
+@router.post("/seed") # Final path will be /workflow/seed
 def seed_mock_issue(data: MockSeedInput):
     """
     Seeds a mock issue directly into the in-memory mock database.
     """
-    from scripts.mock_db import db
+    from scripts.mock_db import db # Keep local import
     db[data.issue_id] = {
         "id": data.issue_id,
         "title": data.title,
@@ -66,3 +64,15 @@ def seed_mock_issue(data: MockSeedInput):
         "status": "Seeded"
     }
     return {"message": f"Issue {data.issue_id} seeded successfully."}
+
+# Added /check endpoint based on frontend call GET /workflow/check
+@router.get("/check") # Final path will be /workflow/check
+def workflow_check():
+    """
+    Placeholder endpoint for workflow integrity check.
+    """
+    # Placeholder implementation - replace with actual logic
+    return {"status": "ok", "message": "Workflow check endpoint stub"}
+
+# NOTE: You might also need other endpoints like /status, /cancel, etc. in this router
+# if they are part of the autonomous workflow and called by the frontend.
