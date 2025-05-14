@@ -33,7 +33,6 @@ app.add_middleware(
 )
 
 # Register routers
-app.include_router(analyze.router, prefix="/debugiq", tags=["Analysis"])
 app.include_router(qa.router, prefix="/qa", tags=["Quality Assurance"])
 app.include_router(doc.router, prefix="/doc", tags=["Documentation"])
 app.include_router(config.config_router, prefix="/api", tags=["Configuration"])
