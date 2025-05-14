@@ -69,6 +69,7 @@ else:
 
 
 # --- Helper function to generate PR body using Gemini ---
+# --- Helper function to generate PR body using Gemini ---
 async def generate_pr_body_with_gemini(issue_id: str, code_diff: str, diagnosis_details: dict, validation_results: dict) -> str:
     """
     Generates a professional PR body using the Gemini API.
@@ -78,10 +79,10 @@ async def generate_pr_body_with_gemini(issue_id: str, code_diff: str, diagnosis_
         return "LLM configuration missing. PR body generated from template."
 
     try:
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')  # Or your preferred Gemini model
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')  # Or your preferred Gemini model
 
-    # Fixed the syntax issue by properly closing the triple quotes for the prompt
-    prompt = f"""
+        # Fixed the syntax issue by properly closing the triple quotes for the prompt
+        prompt = f"""
 You are an AI assistant tasked with writing a professional and concise Pull Request description based on a bug fix and its validation.
 
 Use the following information:
@@ -94,10 +95,12 @@ Diagnosis Summary:
 Validation Results:
 {validation_results.get('summary', 'N/A')}
 
+Code Changes (Unified Diff Format):
+{code_diff}
 """
-    response = await model.generate_text(prompt=prompt)
-    return response.text.strip()
+        response = await model.generate_text(prompt=prompt)
+        return response.text.strip()
 
-except Exception as e:
-    traceback.print_exc()
-    return f"Error generating PR body: {e}"       
+    except Exception as e:
+        traceback.print_exc()
+        return f"Error generating PR body: {e}"
