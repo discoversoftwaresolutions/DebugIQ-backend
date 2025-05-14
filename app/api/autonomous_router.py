@@ -47,25 +47,36 @@ async def run_workflow_orchestrator(issue_id: str):
     logger.info(f"[Orchestrator] Workflow started for issue: {issue_id}")
 
     try:
-        # Step 1: Fetching Details
-        status = "Fetching Details"
-        logger.info(f"[Orchestrator] {issue_id}: {status}")
-        platform_data_api.update_issue_status(issue_id, status)
+    # Step 1: Fetching Details
+    status = "Fetching Details"
+    logger.info(f"[Orchestrator] {issue_id}: {status}")
+    platform_data_api.update_issue_status(issue_id, status)
 
-        # Step 2: Diagnosis
-        status = "Diagnosis in Progress"
-        logger.info(f"[Orchestrator] {issue_id}: {status}")
-        platform_data_api.update_issue_status(issue_id, status)
-        diagnosis_details = await autonomous_diagnose_issue.autonomous_diagnose(issue_id)
+    # Step 2: Diagnosis
+    status = "Diagnosis in Progress"
+    logger.info(f"[Orchestrator] {issue_id}: {status}")
+    platform_data_api.update_issue_status(issue_id, status)
 
-        if not diagnosis_details:
-            raise ValueError("Diagnosis failed to return details.")
+    # Call the diagnosis function asynchronously
+    diagnosis_details = await autonomous_diagnose_issue.autonomous_diagnose(issue_id)
 
-        status = "Diagnosis Complete"
-        logger.info(f"[Orchestrator] {issue_id}: {status}")
-        platform_data_api.update_issue_status(issue_id, status)
-        platform_data_api.save_diagnosis(issue_id, diagnosis_details)
+    # Check if diagnosis details were returned
+    if not diagnosis_details:
+        raise ValueError("Diagnosis failed to return details.")
 
+    # Update status to Diagnosis Complete
+    status = "Diagnosis Complete"
+    logger.info(f"[Orchestrator] {issue_id}: {status}")
+    platform_data_api.update_issue_status(issue_id, status)
+
+    # Save the diagnosis details
+    platform_data_api.save_diagnosis(issue_id, diagnosis_details)
+
+except Exception as e:
+    # Log the error and re-raise it to be handled by the calling function
+    logger.error(f"[Orchestrator] {issue_id}: Error during workflow - {str(e)}", exc_info=True)
+    raise
+      
         # Step 3: Patch Suggestion
         status = "Patch Suggestion in Progress"
         logger.info(f"[Orchestrator] {issue_id}: {status}")
