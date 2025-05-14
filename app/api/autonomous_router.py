@@ -8,7 +8,7 @@ import logging  # Import logging
 from scripts import platform_data_api  # Assumed for status updates and data fetching
 from scripts import autonomous_diagnose_issue  # Assumed for diagnosis logic
 from scripts.agent_suggest_patch import agent_suggest_patch  # Assumed for patch suggestion function
-from scripts.create_pull_request import create_pull_request  # Assuming create_pull_request is here
+from scripts.create_fix_pull_request import create_pull_request # Assuming create_pull_request function is inside create_fix_pull_request.py
 from scripts.validate_proposed_patch import validate_patch  # Ensure validate_patch is implemented
 
 # Setup logger for this module
