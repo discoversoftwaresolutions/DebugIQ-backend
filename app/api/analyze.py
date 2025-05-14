@@ -1,4 +1,4 @@
-# analyze.py
+# backend/analyze.py
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -10,7 +10,7 @@ import logging # Import logging
 logger = logging.getLogger(__name__)
 
 # --- CORRECTION HERE ---
-# Initialize the router WITHOUT a prefix. The prefix will be applied in main.py.
+# Initialize the router WITHOUT a prefix. The prefix /debugiq will be applied in main.py.
 router = APIRouter(tags=["Analysis"]) # Removed prefix="/debugiq"
 
 # Load OpenAI API key from environment variables
@@ -51,6 +51,7 @@ async def suggest_patch(request: AnalyzeRequest):
     """
     # Check if the OpenAI client was initialized successfully due to missing key
     if openai_client is None:
+         logger.error("Attempted to call suggest_patch but OpenAI client is not configured.")
          raise HTTPException(status_code=500, detail="OpenAI API key is not configured in the backend.")
 
     try:
@@ -102,7 +103,7 @@ Respond with the following format:
 
         # Ensure both markers are found and in the correct order
         if diff_index == -1 or explanation_index == -1 or diff_index >= explanation_index:
-             logger.error(f"Markers not found or in incorrect order in GPT-4o reply. Diff at {diff_index}, Explanation at {explanation_index}. Raw reply: {gpt_reply[:500]}...") # Log problematic reply
+             logger.error(f"Markers not found or in incorrect order in GPT-4o reply. Diff at {diff_index}, Explanation at {explanation_index}. Raw reply: {gpt_reply[:500]}...") # Log problematic reply snippet
              raise ValueError("GPT-4o response is not in the expected format (missing markers or wrong order).")
 
         # Extract diff and explanation
@@ -143,6 +144,5 @@ Respond with the following format:
         logger.exception("An unexpected error occurred in suggest_patch endpoint:") # Log with full traceback
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred processing the request: {str(e)}")
 
-# Remember to include this router in your main FastAPI application instance (e.g., in main.py or app.py)
-# Example: app.include_router(router, prefix="/debugiq", tags=["Analysis"])
-# Ensure it's included WITH the prefix in main.py and WITHOUT the prefix here.
+# Note: This file defines the analyze router. It should be included in main.py
+# using app.include_router(router, prefix="/debugiq", ...).
