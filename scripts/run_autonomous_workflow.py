@@ -63,12 +63,23 @@ repo: discoversoftwaresolutions/DebugIQ-backend
 repo ID: 981398754
 The language composition of this repo is [{"name":"Python","percent":99.5},{"name":"Dockerfile","percent":0.5}]
 """
-Diagnosis Summary:
-{diagnosis_details.get('summary', 'N/A')}
+# Ensure all variables (diagnosis_details, validation_results, code_diff) are defined and contain valid data
 
-Validation Results:
-{validation_results.get('summary', 'N/A')}
+# Diagnosis Summary
+diagnosis_summary = diagnosis_details.get('summary', 'N/A')
 
-Code Changes (Unified Diff Format):
-```diff
-{code_diff}
+# Validation Results
+validation_summary = validation_results.get('summary', 'N/A')
+
+# Code Changes
+code_changes = code_diff if code_diff else "No changes available."
+
+# Print the formatted results
+print("Diagnosis Summary:")
+print(diagnosis_summary)
+
+print("\nValidation Results:")
+print(validation_summary)
+
+print("\nCode Changes (Unified Diff Format):")
+print(code_changes)
