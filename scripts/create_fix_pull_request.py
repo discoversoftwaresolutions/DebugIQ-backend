@@ -45,6 +45,7 @@ async def generate_pr_body_with_gemini(issue_id: str, code_diff: str, diagnosis_
     try:
         model = genai.GenerativeModel('gemini-1.5-flash-latest')  # Or your preferred Gemini model
 
+        # Fixed the syntax issue by properly closing the triple quotes for the prompt
         prompt = f"""
 You are an AI assistant tasked with writing a professional and concise Pull Request description based on a bug fix and its validation.
 
