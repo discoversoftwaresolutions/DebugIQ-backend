@@ -1,10 +1,6 @@
-# backend/scripts/create_fix_pull_request.py
-
 import json
 import traceback
-# --- IMPORTANT --- Replace 'requests' with an async HTTP client like 'httpx'
-# import requests # REMOVE or comment out the synchronous requests library
-import httpx # Import the asynchronous HTTP client
+import httpx  # Import the asynchronous HTTP client
 import os
 import google.generativeai as genai
 import base64
@@ -16,12 +12,12 @@ logger = logging.getLogger(__name__)
 
 # --- Configuration ---
 # IMPORTANT: Set these environment variables in your Railway service settings.
-GIT_HOST_API_BASE_URL = os.getenv("GIT_HOST_API_BASE_URL", "https://api.github.com") # Default to GitHub REST API v3
-GIT_REPO_OWNER = os.getenv("GIT_REPO_OWNER") # The owner of the repository (e.g., "your-org")
-GIT_REPO_NAME = os.getenv("GIT_REPO_NAME") # The name of the repository (e.g., "your-repo")
-GIT_API_TOKEN = os.getenv("GIT_API_TOKEN") # GitHub Personal Access Token (PAT) or equivalent
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") # API key for Google Gemini
-DEFAULT_BASE_BRANCH = os.getenv("DEFAULT_BASE_BRANCH", "main") # Branch to base new fix branches on
+GIT_HOST_API_BASE_URL = os.getenv("GIT_HOST_API_BASE_URL", "https://api.github.com")  # Default to GitHub REST API v3
+GIT_REPO_OWNER = os.getenv("GIT_REPO_OWNER")  # The owner of the repository (e.g., "your-org")
+GIT_REPO_NAME = os.getenv("GIT_REPO_NAME")  # The name of the repository (e.g., "your-repo")
+GIT_API_TOKEN = os.getenv("GIT_API_TOKEN")  # GitHub Personal Access Token (PAT) or equivalent
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")  # API key for Google Gemini
+DEFAULT_BASE_BRANCH = os.getenv("DEFAULT_BASE_BRANCH", "main")  # Branch to base new fix branches on
 
 # Define standard headers for GitHub API requests (adjust if using a different Git host)
 # Ensure token is available before formatting Authorization header
@@ -29,19 +25,19 @@ GITHUB_HEADERS = {
     "Accept": "application/vnd.github.v3+json",
     "Authorization": f"token {GIT_API_TOKEN}" if GIT_API_TOKEN else None,
     "X-GitHub-Api-Version": "2022-11-28",
-    "Content-Type": "application/json", # Often needed for POST/PATCH requests
+    "Content-Type": "application/json",  # Often needed for POST/PATCH requests
 }
 
 # Check for required Git environment variables
 if not all([GIT_REPO_OWNER, GIT_REPO_NAME, GIT_API_TOKEN]):
-    logger.error("Missing one or more required Git environment variables (GIT_REPO_OWNER, GIT_REPO_NAME, GIT_API_TOKEN). Pull request creation will not work.")
-    GIT_API_TOKEN = None # Disable authenticated calls if token is missing
+    logger.error(
+        "Missing one or more required Git environment variables (GIT_REPO_OWNER, GIT_REPO_NAME, GIT_API_TOKEN). "
+        "Pull request creation will not work."
+    )
+    GIT_API_TOKEN = None  # Disable authenticated calls if token is missing
     # Consider raising a more critical error here if PR creation is essential for startup
 
-
 # Configure Gemini API client (assuming this configuration is sufficient globally)
-# It's often better to initialize clients where they are used or pass them.
-# If genai.configure is sufficient, keep it. If you need a client instance, initialize it.
 if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
@@ -57,7 +53,6 @@ else:
 async def generate_pr_body_with_gemini(issue_id: str, code_diff: str, diagnosis_details: dict, validation_results: dict) -> str:
     """
     Generates a professional PR body using the Gemini API.
-    Made async as genai.generate_content is awaitable.
 
     Args:
         issue_id (str): The ID of the issue.
