@@ -26,10 +26,14 @@ streamlit-autorefresh>=0.0.4
 pydub>=0.25.1
 soundfile>=0.12.1
 numpy>=1.26
-av>=10.0.0   # Compatible with Python 3.11
+av>=10.0.0    # Compatible with Python 3.11
 markdown2>=2.4.13
 beautifulsoup4>=4.12.3
 
+# === Google Cloud Services ===
+google-cloud-speech>=2.24.0 # Added for Google Cloud Speech-to-Text
+google-cloud-texttospeech>=2.16.1 # Added for Google Cloud Text-to-Speech
+
 # === Developer Utilities ===
-python-dotenv>=1.0.1
+python-dotenv>=1.0
 loguru>=0.7.2
