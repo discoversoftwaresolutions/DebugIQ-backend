@@ -15,10 +15,9 @@ from app.api import analyze, qa, doc, config, voice
 from app.api.voice_ws_router import router as voice_ws_router
 from app.api.autonomous_router import router as autonomous_router
 from app.api.issues_router import router as issues_router
-from app.api.metrics_router import router as metrics_router
-
-# Attempt to import agent_suggest_patch router
+from app.api.metrics_router import router as metrics_router# Attempt to import agent_suggest_patch router
 try:
+   
     from scripts.agent_suggest_patch import router as agent_suggest_patch_router
     logger = logging.getLogger(__name__)
     logger.info("Successfully imported agent_suggest_patch router.")
