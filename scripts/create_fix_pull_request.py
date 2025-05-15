@@ -68,7 +68,7 @@ async def generate_pr_body_with_gemini(issue_id: str, code_diff: str, diagnosis_
         diagnosis_summary = diagnosis_details.get('summary', 'N/A')
         validation_summary = validation_results.get('summary', 'N/A')
         code_changes = code_diff if code_diff else "No changes available."
-                return f"""
+        return f"""
 ## DebugIQ Automated Pull Request
 
 **Issue ID:** {issue_id}
