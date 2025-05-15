@@ -25,12 +25,12 @@ async def validate_patch(issue_id: str, patch_diff: str) -> dict:
         dict: A dictionary containing validation results (status, summary, details).
               Includes "status": "Passed" or "Failed".
     """
-    # --- CORRECTION HERE ---
+    # --- CORRECTION HERE ---
     logger.info(f"[🔍] Starting patch validation for issue {issue_id}...")
 
     # --- Simulated validation logic (Replace with actual checks) ---
-    # These are placeholders. In a real scenario, you'd run static analysis tools,
-    # try applying the patch, potentially run tests, etc.
+    # These are placeholders. In a real scenario, you'd run static analysis tools,
+    # try applying the patch, potentially run tests, etc.
     checks = [
         {"check": "Patch Applies Cleanly", "status": "passed", "details": "Simulated clean application."},
         {"check": "Static Analysis", "status": "passed", "details": "Simulated no critical issues detected."},
@@ -38,14 +38,14 @@ async def validate_patch(issue_id: str, patch_diff: str) -> dict:
         {"check": "Bug Reproduction", "status": "passed", "details": "Simulated bug no longer reproduces with patch."}
     ]
 
-    # Determine overall status
+    # Determine overall status based on simulated checks
     is_valid = all(step["status"] == "passed" for step in checks)
-    validation_status = "Passed" if is_valid else "Failed"
+    validation_status = "Passed" if is_valid else "Failed"
 
-    # Create a summary
+    # Create a summary of automated checks
     validation_summary = "\n".join(f"- {step['check']}: {step['status']}" for step in checks)
 
-    # Prepare the AI code review prompt
+    # Prepare the AI code review prompt
     prompt = f"""You are an AI code reviewer. Assess the following patch and its simulated validation results.
 
 Patch (unified diff format):
