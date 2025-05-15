@@ -81,7 +81,7 @@ async def generate_pr_body_with_gemini(issue_id: str, code_diff: str, diagnosis_
 
 ### Validation Results:
 {validation_summary}
-"""
+
 ### Code Changes:
-```diff
 {code_changes}
+"""
