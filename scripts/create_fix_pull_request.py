@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 GIT_HOST_API_BASE_URL = os.getenv("GIT_HOST_API_BASE_URL", "https://api.github.com")
 GIT_REPO_OWNER = os.getenv("GIT_REPO_OWNER")
@@ -25,7 +26,7 @@ GITHUB_HEADERS = {
 }
 
 if not all([GIT_REPO_OWNER, GIT_REPO_NAME, GITHUB_DISPATCH_TOKEN, GITHUB_PR_WORKFLOW_FILENAME]):
-    logger.error("Missing one or more required Git environment variables needed for Workflow Dispatch. PR creation workflow triggering will not work.")
+    logger.error("Missing one or more required Git environment variables needed for Workflow Dispatch.")
 
 if GEMINI_API_KEY:
     try:
@@ -59,14 +60,42 @@ async def generate_pr_body_with_gemini(issue_id: str, code_diff: str, diagnosis_
         return f"Error generating PR body with AI: {e}. Please write it manually."
 
 async def trigger_pr_creation_workflow(issue_id: str, patch_diff: str, diagnosis_details: dict, validation_results: dict) -> dict:
+    """
+    Args:
+        issue_id (str): The ID of the issue being fixed.
+        patch_diff (str): The suggested code changes in unified diff format.
+        diagnosis_details (dict): Information gathered during diagnosis.
+        validation_results (dict): Results from validating the patch.
+    Returns:
+        dict: {
+            'workflow_url': URL to the workflow run page (if successful),
+            'message': Status message,
+            'error': Error message if triggering failed
+        }
+    """
+    logger.info(f"Attempting to trigger GitHub Actions workflow for issue: {issue_id}")
+
     if not all([GIT_REPO_OWNER, GIT_REPO_NAME, GITHUB_DISPATCH_TOKEN, GITHUB_PR_WORKFLOW_FILENAME]):
-        error_msg = "GitHub Actions Workflow Dispatch configuration missing."
+        error_msg = "GitHub Actions Workflow Dispatch configuration missing. Cannot trigger PR creation workflow."
         logger.error(error_msg)
         return {"workflow_url": None, "message": error_msg, "error": error_msg}
+
     repo_owner = diagnosis_details.get('repository_owner') or GIT_REPO_OWNER
     repo_name = diagnosis_details.get('repository_name') or GIT_REPO_NAME
     base_branch = diagnosis_details.get('base_branch') or DEFAULT_BASE_BRANCH
+
+    if not all([repo_owner, repo_name]):
+        error_msg = "Repository owner or name not specified in config or diagnosis details."
+        logger.error(error_msg)
+        return {"workflow_url": None, "message": error_msg, "error": error_msg}
+
+    logger.info(f"Target Repository for Workflow: {repo_owner}/{repo_name}")
+    logger.info(f"Workflow File: {GITHUB_PR_WORKFLOW_FILENAME}")
+    logger.info(f"Workflow Base Branch: {base_branch}")
+
     pr_body = await generate_pr_body_with_gemini(issue_id, patch_diff, diagnosis_details, validation_results)
+    logger.info(f"Generated PR body (snippet): {pr_body[:300]}...")
+
     dispatch_url = f"{GIT_HOST_API_BASE_URL}/repos/{repo_owner}/{repo_name}/actions/workflows/{GITHUB_PR_WORKFLOW_FILENAME}/dispatches"
     dispatch_payload = {
         "ref": base_branch,
@@ -82,25 +111,55 @@ async def trigger_pr_creation_workflow(issue_id: str, patch_diff: str, diagnosis
             "validation_status": validation_results.get('status', 'Unknown'),
         }
     }
+
+    log_payload = {k: v for k, v in dispatch_payload.items() if k != 'inputs' or ('patch_diff' not in v and 'pr_body' not in v)}
+    if 'inputs' in dispatch_payload:
+        log_payload['inputs'] = {k: v for k, v in dispatch_payload['inputs'].items() if k not in ['patch_diff', 'pr_body']}
+    logger.debug(f"Workflow dispatch payload: {log_payload}")
+
     dispatch_headers = {
         "Accept": "application/vnd.github.v3+json",
         "Authorization": f"token {GITHUB_DISPATCH_TOKEN}",
         "X-GitHub-Api-Version": "2022-11-28",
         "Content-Type": "application/json",
     }
+
     async with httpx.AsyncClient() as client:
         try:
+            logger.info(f"Making POST request to trigger workflow at: {dispatch_url}")
             response_dispatch = await client.post(dispatch_url, headers=dispatch_headers, json=dispatch_payload)
             if response_dispatch.status_code == 204:
+                logger.info(f"✅ Successfully triggered GitHub Actions workflow '{GITHUB_PR_WORKFLOW_FILENAME}' for issue {issue_id}.")
                 workflow_runs_url = f"https://github.com/{repo_owner}/{repo_name}/actions/workflows/{GITHUB_PR_WORKFLOW_FILENAME}"
-                return {
-                    "workflow_url": workflow_runs_url,
-                    "message": f"Workflow triggered successfully. Check {workflow_runs_url} for details.",
-                    "error": None
-                }
+                message = f"GitHub Actions workflow '{GITHUB_PR_WORKFLOW_FILENAME}' triggered for issue {issue_id}. Check {workflow_runs_url} for details."
+                return {"workflow_url": workflow_runs_url, "message": message, "error": None}
             else:
-                error_msg = f"Unexpected status code {response_dispatch.status_code}."
-                return {"workflow_url": None, "message": error_msg, "error": error_msg}
+                error_msg = f"GitHub Actions dispatch API returned unexpected status code {response_dispatch.status_code} for issue {issue_id}."
+                logger.error(error_msg)
+                backend_detail = "N/A"
+                if response_dispatch.text:
+                    try:
+                        backend_detail = response_dispatch.json()
+                    except json.JSONDecodeError:
+                        backend_detail = response_dispatch.text[:500]
+                error_msg += f" - API Response: {backend_detail}"
+                return {"workflow_url": None, "message": f"Workflow Trigger API Error: {error_msg}", "error": error_msg, "backend_detail": backend_detail}
+        except httpx.HTTPStatusError as e:
+            error_msg = f"GitHub Actions dispatch HTTP error for issue {issue_id}: {e}"
+            logger.error(error_msg, exc_info=True)
+            backend_detail = "N/A"
+            if e.response is not None:
+                try:
+                    backend_detail = e.response.json() if e.response.text else "Empty response body"
+                except json.JSONDecodeError:
+                    backend_detail = e.response.text[:500] if e.response.text else "Non-JSON response body"
+                error_msg += f" - API Response: {backend_detail}"
+            return {"workflow_url": None, "message": f"Workflow Trigger HTTP Error: {error_msg}", "error": error_msg, "backend_detail": backend_detail}
+        except httpx.RequestError as e:
+            error_msg = f"GitHub Actions dispatch request error for issue {issue_id}: {e}"
+            logger.error(error_msg, exc_info=True)
+            return {"workflow_url": None, "message": f"Workflow Trigger Request Error: {error_msg}", "error": error_msg}
         except Exception as e:
-            logger.error(f"Error triggering workflow: {e}", exc_info=True)
-            return {"workflow_url": None, "message": f"Error: {e}", "error": str(e)}
+            error_msg = f"An unexpected error occurred during GitHub Actions trigger for issue {issue_id}: {e}"
+            logger.error(error_msg, exc_info=True)
+            return {"workflow_url": None, "message": f"Unexpected Error during Workflow Trigger: {error_msg}", "error": error_msg}
