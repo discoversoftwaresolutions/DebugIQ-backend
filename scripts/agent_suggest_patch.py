@@ -1,109 +1,91 @@
+# backend/scripts/agent_suggest_patch.py
+
 import json
-import traceback
+import traceback # Keep traceback import for detailed exception logging
 from scripts import platform_data_api # Needed by agent_suggest_patch function
 from utils.call_ai_agent import call_ai_agent # Needed by agent_suggest_patch function
-from fastapi import APIRouter # Keep (router instance is still included in main.py)
+# Removed: from fastapi import APIRouter # No longer needed if this file doesn't define a router
 # Removed: from fastapi import HTTPException # No longer needed if no endpoint is here
 # Removed: from pydantic import BaseModel # No longer needed if no endpoint/model defined here
+import logging # Import logging
+
+# Setup logger for this module
+logger = logging.getLogger(__name__)
 
 PATCH_SUGGESTION_TASK_TYPE = "patch_suggestion"
 
-# Define the API router for patch suggestion related endpoints
-# This router instance is still included in main.py, potentially for future endpoints,
-# but it no longer defines the /suggest_patch endpoint.
-router = APIRouter() # Keep
-
-# Removed: --- Pydantic Model for Frontend Payload for this Endpoint ---
-# Removed: class CodeInput(BaseModel): code: str
-
-# ===============================================================
-# Removed: The API endpoint definition for suggest-patch (@router.post("/suggest_patch"))
-# Removed: and the suggest_patch_endpoint function are REMOVED from this file
-# because they should be defined ONLY in app/api/analyze.py to avoid routing conflicts.
-# ===============================================================
+# Removed the router instance definition and any related endpoint code
+# as this file is intended to contain the core function, not API endpoints.
+# router = APIRouter() # REMOVED
 
 
-# Your existing core function that does the work (likely used by the workflow where issue_id and diagnosis are available)
-def agent_suggest_patch(issue_id: str, diagnosis: dict) -> dict | None:
-    """
-    Core function to orchestrate the patch suggestion process, typically
-    called within the autonomous workflow using issue ID and diagnosis.
-    This function is separate from any API endpoint definition.
-    """
-    print(f"🩹 Starting patch suggestion for issue: {issue_id}")
+# Your existing core function that does the work, corrected for async and logging
+# --- CORRECTION HERE ---
+# Define the function as asynchronous (async def)
+# Add 'language' as an argument as it's used in the prompt
+async def agent_suggest_patch(issue_id: str, diagnosis: dict, language: str) -> dict | None:
+    """
+    Core asynchronous function to orchestrate the patch suggestion process, typically
+    called within the autonomous workflow using issue ID and diagnosis details.
+    This function interacts with data storage/Git and an AI agent.
 
-    # ... rest of your existing function code ...
-    # This code relies on issue_id and diagnosis
+    Args:
+        issue_id (str): The ID of the issue.
+        diagnosis (dict): Diagnosis details for the issue.
+        language (str): The programming language of the code being patched.
 
-    try:
-        repo_info = platform_data_api.get_repository_info_for_issue(issue_id)
-        if not repo_info:
-            print(f"❌ No repository info for issue {issue_id}")
-            return None
+    Returns:
+        dict | None: A dictionary containing the suggested patch, explanation, etc.,
+                      or None on failure.
+    """
+    # --- CORRECTION HERE ---
+    logger.info(f"🩹 Starting patch suggestion for issue: {issue_id}")
 
-        # Gather relevant files
-        files_to_fetch = list(set(
-            diagnosis.get("relevant_files", []) +
-            [area.split("#")[0] for area in diagnosis.get("suggested_fix_areas", []) if "#" in area]
-        ))
+    try:
+        # Assume platform_data_api functions are async and need await
+        repo_info = await platform_data_api.get_repository_info_for_issue(issue_id) # await call
+        if not repo_info:
+            logger.error(f"❌ No repository info for issue {issue_id} during patch suggestion.") # Use logger
+            return None
 
-        # Fetch code context
-        code_context = platform_data_api.fetch_code_context(
-            repo_info.get("repository_url"),
-            files_to_fetch
-        )
+        # Gather relevant files from diagnosis
+        files_to_fetch = list(set(
+            diagnosis.get("relevant_files", []) +
+            [area.split("#")[0] for area in diagnosis.get("suggested_fix_areas", []) if "#" in area]
+        ))
+        # Filter out any empty strings or None values that might result from splitting
+        files_to_fetch = [f for f in files_to_fetch if f]
 
-        if not code_context:
-            print(f"❌ No code context found for {issue_id}")
-            return None
+        if not files_to_fetch:
+             logger.warning(f"No relevant files identified in diagnosis for issue {issue_id}.")
+             # Decide how to handle this - maybe return None or proceed with less context
+             return {"patch": "", "explanation": "No relevant files identified for patching."}
 
-        # Prepare the patch suggestion prompt
-        patch_prompt = f"""
-You are a debugging assistant, part of the DebugIQ platform, powered by GPT-4o. Your task is to analyze the provided diagnosis and code context and generate a unified diff patch to fix the bug.
+
+        # Fetch code context for these files
+        code_context = await platform_data_api.fetch_code_context( # await call
+            repo_info.get("repository_url"), # Ensure repository_url is in repo_info
+            files_to_fetch,
+            # You might need to pass commitish/branch info here too
+            # branch = repo_info.get("branch", "main") # Example
+        )
+
+        if not code_context:
+            logger.warning(f"❌ No code context found for {issue_id} in files: {files_to_fetch}. Cannot suggest patch.") # Use logger
+            # Decide how to handle this - AI needs code to patch
+            return {"patch": "", "explanation": "Could not fetch relevant code context for patching."}
+
+
+        # Prepare the patch suggestion prompt
+        patch_prompt = f"""
+You are a debugging assistant, part of the DebugIQ platform. Your task is to analyze the provided diagnosis and code context and generate a unified diff patch to fix the bug.
+
+### Issue ID:
+{issue_id}
 
 ### Diagnosis:
 Root Cause: {diagnosis.get('root_cause', 'Unknown')}
+Detailed Analysis: {diagnosis.get('detailed_analysis', 'None provided')}
 Suggested Fix Areas: {', '.join(diagnosis.get('suggested_fix_areas', []))}
 
 ### Code Context:
-{code_context}
-
-### Instructions:
-1. Generate a unified diff patch that addresses the diagnosis.
-2. Provide a clear and concise explanation of the changes.
-3. Ensure the suggested patch is syntactically correct for {request.language}. # Note: This prompt assumes 'language' is available, which it isn't in the context of this function itself. This might need rethinking if called from a context without diagnosis/language.
-
-Respond with the following format:
-### Patch:
-<patch>
-### Explanation:
-<explanation>
-"""
-
-        # Call DebugIQ's GPT-4o-powered model
-        response = call_ai_agent(PATCH_SUGGESTION_TASK_TYPE, patch_prompt)
-        # Attempt to parse JSON response
-        try:
-             # response_data = json.loads(response) if isinstance(response, str) else response
-             # Fix json load if response is already a dict
-             response_data = json.loads(response) if isinstance(response, str) else response # <--- KEEP THIS LINE AS IS, IT HANDLES STRING OR DICT
-        except json.JSONDecodeError:
-             print(f"⚠️ AI agent response was not valid JSON: {response}")
-             response_data = {} # Handle invalid JSON
-
-        # Parse and return the response
-        return {
-            "patch": response_data.get("patch", ""),
-            "explanation": response_data.get("explanation", "No explanation provided."),
-            "patched_file_name": response_data.get("patched_file_name", "patched_file.py")
-        }
-
-    except Exception as e:
-        print(f"🔥 Failed to suggest patch: {e}")
-        traceback.print_exc()
-        return None
-
-# Note: The 'agent_suggest_patch' function is available to be called
-# from other parts of your application, like the
-# /workflow/run_autonomous_workflow endpoint in autonomous_router.py
-# if it needs to include this step.
