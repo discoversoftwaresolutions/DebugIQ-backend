@@ -47,7 +47,3 @@ async def validate_patch(issue_id: str, patch_diff: str) -> dict:
 
     # Prepare the AI code review prompt
     prompt = f"""You are an AI code reviewer. Assess the following patch and its simulated validation results.
-
-Patch (unified diff format):
-```diff
-{patch_diff}
