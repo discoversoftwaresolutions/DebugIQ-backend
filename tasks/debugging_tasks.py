@@ -4,7 +4,6 @@ import logging
 import asyncio
 from typing import Dict, Any, Optional
 from fastapi import HTTPException # For raising structured errors from tasks
-import os
 
 # === DebugIQ Celery App and Utilities ===
 from debugiq_celery import celery_app # DebugIQ's own Celery app
@@ -19,8 +18,11 @@ from tenacity import ( # For retries
     stop_after_attempt,
     wait_exponential,
     retry_if_exception_type,
+    retry_if_exception, # <--- IMPORTED FOR CUSTOM PREDICATE
     before_sleep_log
 )
+
+import os # Ensure os is imported
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -43,7 +45,18 @@ async def get_openai_client() -> Optional[AsyncOpenAI]:
             openai_client_instance = None
     return openai_client_instance
 
-# --- LLM Retry Strategy (adapted from AlgorithmAgent's utils) ---
+# --- Helper function for conditional APIError retry (NEW) ---
+def is_retryable_openai_api_error(exception: Exception) -> bool:
+    """
+    Predicate for tenacity: Returns True if the OpenAI APIError
+    is a transient server error (5xx) that should be retried.
+    """
+    return isinstance(exception, APIError) and \
+           hasattr(exception, 'status_code') and \
+           exception.status_code and \
+           exception.status_code >= 500
+
+# --- LLM Retry Strategy (UPDATED) ---
 LLM_RETRY_STRATEGY = retry(
     stop=stop_after_attempt(7), # More attempts for LLMs due to higher transient failure rates
     wait=wait_exponential(multiplier=1, min=2, max=60), # Longer delays, up to 60s
@@ -51,8 +64,7 @@ LLM_RETRY_STRATEGY = retry(
         retry_if_exception_type(APITimeoutError) |
         retry_if_exception_type(APIConnectionError) |
         retry_if_exception_type(RateLimitError) |
-        # Only retry generic APIError if it's a transient server error (5xx)
-        retry_if_exception_type(APIError, lambda e: e.status_code and e.status_code >= 500)
+        retry_if_exception(is_retryable_openai_api_error) # <--- UPDATED TO USE CUSTOM PREDICATE
     ),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True # Re-raise the last exception after all retries are exhausted
@@ -116,7 +128,7 @@ Respond with the following format:
                 temperature=0.7,
                 max_tokens=2000
             )
-            # Ensure content exists before returning
+            # Ensure choices and message exist and content is not None/empty
             if not (response.choices and response.choices[0].message and response.choices[0].message.content):
                 raise ValueError("OpenAI response did not contain expected message content.")
             return response.choices[0].message.content
