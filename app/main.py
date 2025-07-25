@@ -10,6 +10,7 @@ import logging
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session # For DB dependency injection
+from sqlalchemy import text # <--- ADDED: For SQLAlchemy 2.0 raw SQL compatibility
 
 # === DebugIQ Specific Imports ===
 from app.api import analyze, qa, doc, config, voice # Your existing routers
@@ -59,7 +60,8 @@ async def startup_event():
         # Check Redis and DB connectivity as part of startup
         await _global_debugiq_redis_aio_client.ping()
         db_session = SessionLocal()
-        db_session.execute("SELECT 1")
+        # --- FIX APPLIED HERE ---
+        db_session.execute(text("SELECT 1")) # <--- UPDATED: Wrap raw SQL with text()
         db_session.close()
         logger.info("✅ DebugIQ: Redis and Database connected successfully during startup.")
     except Exception as e:
@@ -121,7 +123,8 @@ def read_root():
 async def health_check(db: Session = Depends(get_db)):
     try:
         await _global_debugiq_redis_aio_client.ping()
-        db.execute("SELECT 1")
+        # --- FIX APPLIED HERE ---
+        db.execute(text("SELECT 1")) # <--- UPDATED: Wrap raw SQL with text()
         return {"status": "ok", "message": "API is running", "database": "connected", "redis": "connected"}
     except Exception as e:
         logger.error(f"DebugIQ Health Check failed: {e}", exc_info=True)
