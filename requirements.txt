@@ -6,7 +6,8 @@ python-multipart>=0.0.7
 aiofiles>=23.2.1
 sqlalchemy 
 psycopg2-binary
-celery redis
+celery 
+redis
 
 # === AI Clients ===
 openai>=1.14.3
