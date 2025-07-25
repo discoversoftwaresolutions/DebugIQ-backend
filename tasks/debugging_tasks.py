@@ -4,6 +4,7 @@ import logging
 import asyncio
 from typing import Dict, Any, Optional
 from fastapi import HTTPException # For raising structured errors from tasks
+import os
 
 # === DebugIQ Celery App and Utilities ===
 from debugiq_celery import celery_app # DebugIQ's own Celery app
