@@ -1,5 +1,6 @@
 # File: backend/app/models.py (DebugIQ Service)
 from sqlalchemy import Column, String, Integer, DateTime, JSON, Text
+from pydantic import BaseModel
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 from typing import Dict, Any, Optional
