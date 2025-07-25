@@ -4,6 +4,7 @@ uvicorn[standard]>=0.27.1
 requests>=2.31
 python-multipart>=0.0.7
 aiofiles>=23.2.1
+sqlalchemy psycopg2-binary
 
 # === AI Clients ===
 openai>=1.14.3
